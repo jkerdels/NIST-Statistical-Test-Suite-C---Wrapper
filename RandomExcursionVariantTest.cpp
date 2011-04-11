@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   RandomExcursionVariantTest.cpp
  * Author: jk
- * 
+ *
  * Created on 14. Dezember 2010, 01:00
  */
 #include <cstdlib>
@@ -92,7 +92,7 @@ RandomExcursionsVariant(int n)
 }
  */
     testOk = true;
-    
+
     uint64_t nob = getNrOfBits();
     if (nob < 1000000) {
         fprintf(stderr,"RandomExcursionVariantTest::runTest(): "
@@ -111,7 +111,7 @@ RandomExcursionsVariant(int n)
     }
     J = 0;
     S_k[0] = 2*(int)getBit(0) - 1;
-    for ( i=1; i<nob; i++ ) {
+    for ( i=1; i<(int)nob; i++ ) {
             S_k[i] = S_k[i-1] + 2*getBit(i) - 1;
             if ( S_k[i] == 0 )
                     J++;
@@ -129,7 +129,7 @@ RandomExcursionsVariant(int n)
         for ( p=0; p<=17; p++ ) {
             x = stateX[p];
             count = 0;
-            for ( i=0; i<nob; i++ )
+            for ( i=0; i<(int)nob; i++ )
                 if ( S_k[i] == x )
                     count++;
             p_value = erfc(fabs(count-J)/(sqrt(2.0*J*(4.0*fabs(x)-2))));

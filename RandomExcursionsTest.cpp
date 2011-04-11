@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   RandomExcursionsTest.cpp
  * Author: jk
- * 
+ *
  * Created on 14. Dezember 2010, 00:25
  */
 #include <cstdlib>
@@ -146,7 +146,7 @@ RandomExcursions(int n)
 }
  */
     testOk = true;
-    
+
     uint64_t nob = getNrOfBits();
     if (nob < 1000000) {
         fprintf(stderr,"RandomExcursionsTest::runTest(): "
@@ -179,7 +179,7 @@ RandomExcursions(int n)
 
     J = 0; 					// DETERMINE CYCLES
     S_k[0] = 2*(int)getBit(0) - 1;
-    for( i=1; i<nob; i++ ) {
+    for( i=1; i<(int)nob; i++ ) {
         S_k[i] = S_k[i-1] + 2*getBit(i) - 1;
         if ( S_k[i] == 0 ) {
             J++;

@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   BlockFrequencyTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 10:04
  */
 #include <cstdio>
@@ -10,7 +10,7 @@ using namespace std;
 
 #include "BlockFrequencyTest.h"
 #include "Cephes.h"
- 
+
 BlockFrequencyTest::BlockFrequencyTest(bool _autoBlockSize, uint64_t _blockSize) :
     AbstractTest(),
     autoBlockSize(_autoBlockSize),
@@ -93,7 +93,8 @@ BlockFrequency(int M, int n)
     }
     chi_squared = 4.0 * M * sum;
     p_value = Cephes::cephes_igamc((double)(N)/2.0, chi_squared/2.0);
-    
+
+    return p_value;
 }
 
 void BlockFrequencyTest::setAutoBlockSize(bool _autoBlockSize)

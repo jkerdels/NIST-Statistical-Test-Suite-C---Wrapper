@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   ApproximateEntropyTest.cpp
  * Author: jk
- * 
+ *
  * Created on 13. Dezember 2010, 23:46
  */
 #include <cstdlib>
@@ -27,12 +27,12 @@ ApproximateEntropyTest::~ApproximateEntropyTest()
 
 void ApproximateEntropyTest::setBlockSize(int blockSize)
 {
-
+    m = blockSize;
 }
 
 int ApproximateEntropyTest::getBlockSize()
 {
-
+    return m;
 }
 
 
@@ -123,7 +123,7 @@ ApproximateEntropy(int m, int n)
         return 0.0;
     }
 
-    
+
     int			 i, j, k, r, blockSize, seqLength, powLen, index;
     double		 sum, numOfBlocks, ApEn[2], apen, chi_squared, p_value;
     unsigned int	*P;
@@ -175,5 +175,5 @@ ApproximateEntropy(int m, int n)
     p_value = Cephes::cephes_igamc(pow(2, m-1), chi_squared/2.0);
 
     return p_value;
-    
+
 }

@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   NonOverlappingTemplateMatchingTest.cpp
  * Author: jk
- * 
+ *
  * Created on 16. August 2010, 20:20
  */
 
@@ -200,7 +200,7 @@ double NonOverlappingTemplateMatchingTest::runTest()
     FILE *fp;
     double sum, chi2, p_value, lambda, pi[6], varWj;
     p_value = 0.0;
-    
+
     int i, j, jj, k, match, SKIP, M, N, K = 5;
     char directory[100];
     Matrix::BitSequence *sequence = NULL;
@@ -239,7 +239,7 @@ double NonOverlappingTemplateMatchingTest::runTest()
     }
 
 
-    if ( numOfTemplates[m] < MAXNUMOFTEMPLATES )
+    if ( numOfTemplates[m] < (int)MAXNUMOFTEMPLATES )
         SKIP = 1;
     else
         SKIP = (int)(numOfTemplates[m]/MAXNUMOFTEMPLATES);

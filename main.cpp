@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   main.cpp
  * Author: jk
  *
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
                "            specified\n\n"
 			   "         -d [delimiter char] (optional)\n"
 			   "            specifies the delimiter to use in the output file\n\n");
-		return 0;	
+		return 0;
 	}
 
 	// parameter vars
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 	bool useDefaultParams = false;
 
 	// parse parameters
-	uint32_t i = 1;
+	int32_t i = 1;
 	while (i < argc) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
@@ -106,11 +106,11 @@ int main(int argc, char** argv)
 	}
 
 	// check input params
-	
+
 	if ((inputfiles.size() > 0) &&
         (outputfile != NULL) &&
-        ((useDefaultParams == true) || 
-         (false /* add check for parameter-file later */))) 
+        ((useDefaultParams == true) ||
+         (false /* add check for parameter-file later */)))
 	{
 		// prepare tests
 		uint32_t testDataSize = 0;
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 				AbstractTest *curTest = *tit;
 				curTest->setData(testdata,testDataSize);
 				curTest->setResultVector(&resultVec);
-			}			
+			}
 		} else {
 			// set up test according to parameter file
 		}

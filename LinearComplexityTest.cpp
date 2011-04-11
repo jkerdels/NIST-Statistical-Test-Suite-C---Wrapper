@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   LinearComplexityTest.cpp
  * Author: jk
- * 
+ *
  * Created on 13. Dezember 2010, 22:27
  */
 #include <cstdlib>
@@ -194,6 +194,8 @@ LinearComplexity(int M, int n)
     double    p_value, T_, mean, nu[7], chi2;
     double    pi[7] = { 0.01047, 0.03125, 0.12500, 0.50000, 0.25000, 0.06250, 0.020833 };
     Matrix::BitSequence  *T, *P, *B_, *C;
+    P = NULL;
+    C = NULL;
 
     N = (int)floor(nob/M);
 
@@ -221,7 +223,7 @@ LinearComplexity(int M, int n)
         return 0.0;
     }
 
-    
+
     for ( i=0; i<K+1; i++ )
             nu[i] = 0.00;
     for ( ii=0; ii<N; ii++ ) {

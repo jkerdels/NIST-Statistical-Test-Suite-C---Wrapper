@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   DiscreteFourierTransformTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 19:35
  */
 
@@ -92,6 +92,7 @@ double DiscreteFourierTransformTest::runTest()
     }
 
     double p_value, upperBound, percentile, N_l, N_o, d, *m, *X, *wsave;
+    wsave = NULL;
     int64_t i, count;
     int ifac[15];
 
@@ -110,7 +111,7 @@ double DiscreteFourierTransformTest::runTest()
     }
 
     seekPos(0);
-    for ( i=0; i<nob; i++ )
+    for ( i=0; i<(int)nob; i++ )
         X[i] = 2 * getNextBit() - 1;
 
     __ogg_fdrffti(nob, wsave, ifac);	// INITIALIZE WORK ARRAYS
@@ -118,12 +119,12 @@ double DiscreteFourierTransformTest::runTest()
 
     m[0] = sqrt(X[0]*X[0]);	    // COMPUTE MAGNITUDE
 
-    for ( i=0; i<nob/2; i++ )
+    for ( i=0; i<(int)nob/2; i++ )
         m[i+1] = sqrt(pow(X[2*i+1],2)+pow(X[2*i+2],2));
 
     count = 0;				       // CONFIDENCE INTERVAL
     upperBound = sqrt(2.995732274*(double)(nob));
-    for ( i=0; i<nob/2; i++ )
+    for ( i=0; i<(int)nob/2; i++ )
         if ( m[i] < upperBound )
             count++;
     percentile = (double)count/(double)(nob/2)*100.0;
@@ -136,6 +137,7 @@ double DiscreteFourierTransformTest::runTest()
     free(wsave);
     free(m);
 
+    return p_value;
 }
 
 

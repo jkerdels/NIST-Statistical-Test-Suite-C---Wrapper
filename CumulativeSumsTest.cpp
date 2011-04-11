@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   CumulativeSumsTest.cpp
  * Author: jk
- * 
+ *
  * Created on 14. Dezember 2010, 00:01
  */
 
@@ -112,7 +112,7 @@ CumulativeSums(int n)
 	fprintf(stats[TEST_CUSUM], "%s\t\tp_value = %f\n\n", p_value < ALPHA ? "FAILURE" : "SUCCESS", p_value); fflush(stats[TEST_CUSUM]);
 	fprintf(results[TEST_CUSUM], "%f\n", p_value); fflush(results[TEST_CUSUM]);
 }
- 
+
  */
     uint64_t nob = getNrOfBits();
 
@@ -123,11 +123,13 @@ CumulativeSums(int n)
 
     int     S, sup, inf, z, zrev, k;
     double  sum1, sum2, p_value;
+    z = 0;
+    zrev = 0;
 
     S = 0;
     sup = 0;
     inf = 0;
-    for ( k=0; k<nob; k++ ) {
+    for ( k=0; k<(int)nob; k++ ) {
             getBit(k) ? S++ : S--;
             if ( S > sup )
                     sup++;
@@ -141,12 +143,12 @@ CumulativeSums(int n)
     if (mode == 0) {
         // forward
         sum1 = 0.0;
-        for ( k=(-nob/z+1)/4; k<=(nob/z-1)/4; k++ ) {
+        for ( k=(-(int)nob/z+1)/4; k<=((int)nob/z-1)/4; k++ ) {
                 sum1 += Cephes::cephes_normal(((4*k+1)*z)/sqrt(nob));
                 sum1 -= Cephes::cephes_normal(((4*k-1)*z)/sqrt(nob));
         }
         sum2 = 0.0;
-        for ( k=(-nob/z-3)/4; k<=(nob/z-1)/4; k++ ) {
+        for ( k=(-(int)nob/z-3)/4; k<=((int)nob/z-1)/4; k++ ) {
                 sum2 += Cephes::cephes_normal(((4*k+3)*z)/sqrt(nob));
                 sum2 -= Cephes::cephes_normal(((4*k+1)*z)/sqrt(nob));
         }
@@ -155,12 +157,12 @@ CumulativeSums(int n)
     } else {
         // backwards
         sum1 = 0.0;
-        for ( k=(-nob/zrev+1)/4; k<=(nob/zrev-1)/4; k++ ) {
+        for ( k=(-(int)nob/zrev+1)/4; k<=((int)nob/zrev-1)/4; k++ ) {
                 sum1 += Cephes::cephes_normal(((4*k+1)*zrev)/sqrt(nob));
                 sum1 -= Cephes::cephes_normal(((4*k-1)*zrev)/sqrt(nob));
         }
         sum2 = 0.0;
-        for ( k=(-nob/zrev-3)/4; k<=(nob/zrev-1)/4; k++ ) {
+        for ( k=(-(int)nob/zrev-3)/4; k<=((int)nob/zrev-1)/4; k++ ) {
                 sum2 += Cephes::cephes_normal(((4*k+3)*zrev)/sqrt(nob));
                 sum2 -= Cephes::cephes_normal(((4*k+1)*zrev)/sqrt(nob));
         }
@@ -168,6 +170,6 @@ CumulativeSums(int n)
     }
 
     return p_value;
-    
+
 }
 
