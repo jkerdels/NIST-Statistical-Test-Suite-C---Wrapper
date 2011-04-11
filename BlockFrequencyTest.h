@@ -25,6 +25,8 @@ public:
 
     double runTest();
     
+	const char* getTestName() {return "BlockFrequency";}
+
 private:
 
     bool     autoBlockSize;

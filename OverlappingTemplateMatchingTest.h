@@ -29,6 +29,8 @@ private:
 
     int32_t m;
 
+	const char* getTestName() {return "OvTemplMatch";}
+
 };
 
 #endif	/* OVERLAPPINGTEMPLATEMATCHINGTEST_H */

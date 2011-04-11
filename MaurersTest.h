@@ -20,6 +20,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "Maurers";}
+
 private:
 
 };

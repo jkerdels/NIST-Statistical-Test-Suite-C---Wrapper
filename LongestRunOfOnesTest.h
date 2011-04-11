@@ -18,6 +18,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "LongRunOfOnes";}
+
 private:
 
 };

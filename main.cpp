@@ -2,20 +2,18 @@
  * File:   main.cpp
  * Author: jk
  *
- * Created on 14. August 2010, 23:53
+ * Created on 11. April 2011, 23:53
  */
 
 #include <cstdlib>
 #include <cstdio>
-#include <iostream>
-#include <ctime>
 #include <vector>
 
 using namespace std;
 
 #include <inttypes.h>
-#include <typeinfo>
 
+#include "AbstractTest.h"
 #include "FrequencyTest.h"
 #include "BlockFrequencyTest.h"
 #include "RunsTest.h"
@@ -32,60 +30,184 @@ using namespace std;
 #include "RandomExcursionsTest.h"
 #include "RandomExcursionVariantTest.h"
 
-static const uint32_t TestDataSize = 125000;
-static const uint32_t NumberOfTrials = 100;
-static const double   Alpha = 0.01;
-
 int main(int argc, char** argv)
 {
+	// print help if no parameters are provided
+	if (argc == 1) {
+		printf("Usage: %s [OPTIONS]\n\n",argv[0]);
+		printf("Options:\n"
+		       "         -i [inputfiles]\n"
+			   "            one or more input files with random data to test\n"
+			   "            1.000.000 Bits per file recommended to provide\n"
+               "            enough data for all tests\n\n"
+			   "         -A\n"
+               "            run all tests with default parameters\n"
+               "            for detailed information please read the excellent\n"
+               "            STS manual of NIST\n\n"
+			   "         -o [outputfile]\n"
+			   "            the results will be formated as columns separated\n"
+               "            by a delimiter specified with -d or space if not\n"
+               "            specified\n\n"
+			   "         -d [delimiter char] (optional)\n"
+			   "            specifies the delimiter to use in the output file\n\n");
+		return 0;	
+	}
 
-    srand( time(0) );
-    uint8_t *testData = new uint8_t[TestDataSize];
+	// parameter vars
+	vector<FILE*> inputfiles;
+	char colDelimiter = ' ';
+	FILE *outputfile  = NULL;
+	bool useDefaultParams = false;
 
-    uint32_t nrOfFails = 0;
+	// parse parameters
+	uint32_t i = 1;
+	while (i < argc) {
+		if (argv[i][0] == '-') {
+			switch (argv[i][1]) {
 
-    uint32_t i,j;
+				// get input data
+				case 'i' : {
+					++i;
+					while ((i < argc) && (argv[i][0] != '-')) {
+						FILE *tmpfile = fopen(argv[i],"rb");
+						if (tmpfile)
+							inputfiles.push_back(tmpfile);
+						++i;
+					}
+					--i;
+				} break;
 
-    printf("\n----------\n");
+				// enable use of default parameters
+				case 'A' : {
+					useDefaultParams = true;
+				} break;
 
-    //vector<double> results;
-    RandomExcursionVariantTest curTest;
+				// get output file
+				case 'o' : {
+					++i;
+					if (i < argc)
+						outputfile = fopen(argv[i],"wb");
+				} break;
 
+				// get custom delimiter
+				case 'd' : {
+					++i;
+					if (i < argc)
+						colDelimiter = argv[i][0];
+				} break;
 
-    nrOfFails = 0;
-    printf("Test of %s:\n",typeid(curTest).name());
+				// unknown parameter
+				default : {
+					printf("Unknown parameter: %s\n",argv[i]);
+				} break;
+			}
+		}
+		++i;
+	}
 
-    int realNrOfTrials = 0;
+	// check input params
+	
+	if ((inputfiles.size() > 0) &&
+        (outputfile != NULL) &&
+        ((useDefaultParams == true) || 
+         (false /* add check for parameter-file later */))) 
+	{
+		// prepare tests
+		uint32_t testDataSize = 0;
+		uint8_t *testdata     = 0;
+		vector<AbstractTest*> tests;
+		vector<double> resultVec;
+		if (useDefaultParams) {
+			// set up default test
+			tests.push_back(new FrequencyTest());
+			tests.push_back(new BlockFrequencyTest());
+			tests.push_back(new RunsTest());
+			tests.push_back(new LongestRunOfOnesTest());
+			tests.push_back(new RankTest());
+			tests.push_back(new DiscreteFourierTransformTest());
+			tests.push_back(new NonOverlappingTemplateMatchingTest());
+			tests.push_back(new OverlappingTemplateMatchingTest());
+			tests.push_back(new MaurersTest());
+			tests.push_back(new LinearComplexityTest());
+			tests.push_back(new SerialTest());
+			tests.push_back(new ApproximateEntropyTest());
+			tests.push_back(new CumulativeSumsTest());
+			tests.push_back(new RandomExcursionsTest());
+			tests.push_back(new RandomExcursionVariantTest());
+			// set default test data size to 1.000.000 bits
+			testDataSize = 125000;
+			testdata = new uint8_t[testDataSize];
+			vector<AbstractTest*>::iterator tit;
+			for (tit = tests.begin(); tit != tests.end(); ++tit) {
+				AbstractTest *curTest = *tit;
+				curTest->setData(testdata,testDataSize);
+				curTest->setResultVector(&resultVec);
+			}			
+		} else {
+			// set up test according to parameter file
+		}
+		// run tests
+		if (testdata) {
+			uint32_t inpCnt = 0;
+			vector<FILE*>::iterator it;
+			for (it = inputfiles.begin(); it != inputfiles.end(); ++it) {
+				// read data
+				uint32_t offset = 0;
+				uint32_t rr     = 0;
+				while ((rr < testDataSize) && (!feof(*it))) {
+                	rr += fread(testdata+offset,1,testDataSize-rr,*it);
+					offset += rr;
+				}
+				if (rr < testDataSize) {
+					printf("Not enough data for input file nr. %u - skipping it.\n",inpCnt);
+					continue;
+				}
+				// process data
+				vector<AbstractTest*>::iterator tit;
+				for (tit = tests.begin(); tit != tests.end(); ++tit) {
+					AbstractTest *curTest = *tit;
+					resultVec.clear();
+					double pValue = curTest->runTest();
+					if (inpCnt == 0) {
+						if (curTest->resultVectorNeeded()) {
+							uint32_t j;
+							for (j = 0; j < resultVec.size(); ++j)
+								fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
+						} else {
+							fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
+						}
+					}
+					if (curTest->resultVectorNeeded()) {
+						uint32_t j;
+						for (j = 0; j < resultVec.size(); ++j)
+							fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
+					} else {
+						fprintf(outputfile,"%f%c",pValue,colDelimiter);
+					}
+				}
+				if (inpCnt == 0)
+					fprintf(outputfile,"\n");
+				++inpCnt;
+			}
+		}
+		// cleanup tests
+		if (testdata)
+			delete[] testdata;
+		vector<AbstractTest*>::iterator tit;
+		for (tit = tests.begin(); tit != tests.end(); ++tit) {
+			delete *tit;
+		}
+	}
 
-    for (j = 0; j < NumberOfTrials; ++j) {
-
-        printf("Trial %i\n",j);
-
-        
-        for (i = 0; i < TestDataSize; ++i)
-            testData[i] = rand();
-        
-
-        curTest.setData(testData,TestDataSize);
-
-        double pVal = curTest.runTest();
-
-        realNrOfTrials++;
-
-        if ((pVal < Alpha) && (curTest.testWasApplicable()))
-            ++nrOfFails;
-
-    }
-
-    printf("\nNumber of fails: %u\n",nrOfFails);
-    printf("Expected number of fails: %f\n",(double)(realNrOfTrials) * Alpha);
-    printf("Number of runs per trial: %f\n",(double)(realNrOfTrials) / (double)(NumberOfTrials));
-
-    printf("\n----------\n");
-
-    
-    delete[] testData;
+	// cleanup
+	vector<FILE*>::iterator it;
+	for (it = inputfiles.begin(); it != inputfiles.end(); ++it) {
+		fclose(*it);
+	}
+	if (outputfile)
+		fclose(outputfile);
 
     return 0;
 }
+
 

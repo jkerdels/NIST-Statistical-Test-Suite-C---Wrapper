@@ -17,6 +17,8 @@ public:
     ~DiscreteFourierTransformTest();
 
     double runTest();
+
+	const char* getTestName() {return "DiscreteFourierTransform";}
     
 private:
 

@@ -21,6 +21,8 @@ public:
 
     bool testWasApplicable();
 
+	const char* getTestName() {return "RndExcVar";}
+
 private:
 
     bool testOk;

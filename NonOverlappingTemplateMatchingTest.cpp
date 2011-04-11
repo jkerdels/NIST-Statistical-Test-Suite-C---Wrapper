@@ -16,10 +16,9 @@ using namespace std;
 #include "Tools.h"
 #include "Cephes.h"
 
-NonOverlappingTemplateMatchingTest::NonOverlappingTemplateMatchingTest(vector<double> *_pValues) :
+NonOverlappingTemplateMatchingTest::NonOverlappingTemplateMatchingTest() :
     AbstractTest(),
-    m(9),
-    pValues(_pValues)
+    m(9)
 {
 }
 
@@ -46,16 +45,6 @@ void NonOverlappingTemplateMatchingTest::setTemplateLength(int32_t length)
 int32_t NonOverlappingTemplateMatchingTest::getTemplateLength()
 {
     return m;
-}
-
-void NonOverlappingTemplateMatchingTest::setResultVector(vector<double> *_pValues)
-{
-    pValues = _pValues;
-}
-
-vector<double>* NonOverlappingTemplateMatchingTest::getResultVector()
-{
-    return pValues;
 }
 
 

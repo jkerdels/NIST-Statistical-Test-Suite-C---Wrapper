@@ -22,6 +22,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "CumulativeSums";}
+
 private:
     int mode;
 

@@ -23,6 +23,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "ApproxEnt";}
+
 private:
 
     int m;

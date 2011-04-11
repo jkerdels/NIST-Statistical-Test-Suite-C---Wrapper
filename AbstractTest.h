@@ -9,6 +9,9 @@
 #define	ABSTRACTTEST_H
 
 #include <inttypes.h>
+#include <vector>
+
+using namespace std;
 
 class Matrix;
 
@@ -40,12 +43,23 @@ public:
     // use this function to check, if the last runTest() was applicable
     virtual bool testWasApplicable() {return true;}
 
+	// some tests return more than one double,
+	// use these functions to set and get the result vector
+    void setResultVector(vector<double> *_pValues);
+    vector<double>* getResultVector();
+	// use this function to check, wether the result vector is needed
+	virtual bool resultVectorNeeded() {return false;}
+
+	// implement this function to return the test name
+	virtual const char* getTestName() {return "foo";}
 
 protected:
     uint64_t getNrOfBits();
     int8_t   getBit(uint64_t bitIdx);
     void     seekPos(uint64_t bitIdx);
     int8_t   getNextBit();
+
+    vector<double> *pValues;
 
 private:
 

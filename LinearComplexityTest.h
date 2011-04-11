@@ -25,6 +25,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "LinCompl";}
+
 private:
     bool autoBlockSize;
     int  M;

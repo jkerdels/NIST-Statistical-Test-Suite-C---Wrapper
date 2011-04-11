@@ -25,6 +25,8 @@ private:
 
     bool testOk;
 
+	const char* getTestName() {return "RndExc";}
+
 };
 
 #endif	/* RANDOMEXCURSIONSTEST_H */

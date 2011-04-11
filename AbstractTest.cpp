@@ -12,7 +12,6 @@
 using namespace std;
 
 #include "AbstractTest.h"
-#include "QRBG.h"
 
 AbstractTest::AbstractTest() :
     dataSrcType(dsNone),
@@ -50,7 +49,7 @@ void AbstractTest::setDataSelfTest()
 
     printf("Performing self test on input data:\n");
     uint32_t ds = getNrOfBits() / 8;
-    uint8_t *copyData = new uint8[ds];
+    uint8_t *copyData = new uint8_t[ds];
     uint8_t *cdp = copyData;
 
     printf("* checking seek + nextbit\n");
@@ -170,6 +169,16 @@ int8_t AbstractTest::getNextBit()
             return - 1;
         }
     }
+}
+
+void AbstractTest::setResultVector(vector<double> *_pValues)
+{
+    pValues = _pValues;
+}
+
+vector<double>* AbstractTest::getResultVector()
+{
+    return pValues;
 }
 
 

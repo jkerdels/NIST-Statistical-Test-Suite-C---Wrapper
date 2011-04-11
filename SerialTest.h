@@ -22,6 +22,8 @@ public:
 
     double runTest();
 
+	const char* getTestName() {return "Serial";}
+
 private:
     int m;
 
