@@ -164,29 +164,44 @@ int main(int argc, char** argv)
 				}
 				// process data
 				vector<AbstractTest*>::iterator tit;
+				if (inpCnt == 0) {
+                    for (tit = tests.begin(); tit != tests.end(); ++tit) {
+                        AbstractTest *curTest = *tit;
+                        if (inpCnt == 0) {
+                            if (curTest->resultVectorNeeded()) {
+                                resultVec.clear();
+                                curTest->runTest();
+                                uint32_t j;
+                                for (j = 0; j < resultVec.size(); ++j)
+                                    fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
+                            } else {
+                                fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
+                            }
+                        }
+                    }
+                    fprintf(outputfile,"\n");
+				}
 				for (tit = tests.begin(); tit != tests.end(); ++tit) {
 					AbstractTest *curTest = *tit;
 					resultVec.clear();
 					double pValue = curTest->runTest();
-					if (inpCnt == 0) {
-						if (curTest->resultVectorNeeded()) {
-							uint32_t j;
-							for (j = 0; j < resultVec.size(); ++j)
-								fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
-						} else {
-							fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
-						}
-					}
 					if (curTest->resultVectorNeeded()) {
 						uint32_t j;
-						for (j = 0; j < resultVec.size(); ++j)
-							fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
+						if (curTest->testWasApplicable()) {
+                            for (j = 0; j < resultVec.size(); ++j)
+                                fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
+                        } else {
+                            for (j = 0; j < resultVec.size(); ++j)
+                                fprintf(outputfile,"***%c",colDelimiter);
+                        }
 					} else {
-						fprintf(outputfile,"%f%c",pValue,colDelimiter);
+                        if (curTest->testWasApplicable())
+                            fprintf(outputfile,"%f%c",pValue,colDelimiter);
+                        else
+                            fprintf(outputfile,"***%c",colDelimiter);
 					}
 				}
-				if (inpCnt == 0)
-					fprintf(outputfile,"\n");
+                fprintf(outputfile,"\n");
 				++inpCnt;
 			}
 		}
