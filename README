@@ -1,4 +1,4 @@
-This is a c++ wrapper of the NIST random data test suite. See 
+This is a c++ wrapper for the NIST Statistical Test Suite. See 
 
 http://csrc.nist.gov/groups/ST/toolkit/rng/documentation_software.html
 
