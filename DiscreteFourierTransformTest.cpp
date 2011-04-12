@@ -85,6 +85,7 @@ double DiscreteFourierTransformTest::runTest()
 
  */
 
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 1000) {
         fprintf(stderr,"DiscreteFourierTransformTest::runTest(): Data should contain at least 1000 Bits!\n");

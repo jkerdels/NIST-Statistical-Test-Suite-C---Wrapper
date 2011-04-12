@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   LongestRunOfOnesTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 17:13
  */
 #include <cstdio>
@@ -129,12 +129,13 @@ double LongestRunOfOnesTest::runTest()
 
  */
 
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 128) {
         fprintf(stderr,"LongestRunOfOnesTest::runTest(): Data should contain at least 128 Bits!\n");
         return 0.0;
     }
-    
+
     double pval, chi2, pi[7];
 
     uint64_t run, v_n_obs, N, i, j, K, M, V[7];

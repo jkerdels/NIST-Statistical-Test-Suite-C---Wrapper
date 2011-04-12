@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   AbstractTest.cpp
  * Author: jk
- * 
+ *
  * Created on 14. August 2010, 23:57
  */
 #include <cstdlib>
@@ -103,7 +103,9 @@ int8_t AbstractTest::getBit(uint64_t bitIdx)
     }
     switch (dataSrcType) {
         case dsMemory : {
-            return (*(data + (bitIdx >> 3)) >> (bitIdx & 7)) & 1;
+            //return (*(data + (bitIdx >> 3)) >> (bitIdx & 7)) & 1;
+            // MSB first as in the NIST suite
+            return (*(data + (bitIdx >> 3)) >> (7 - (bitIdx & 7))) & 1;
         }
         default : {
             fprintf(stderr,"ERROR in AbstractTest::getBit(): "
@@ -124,7 +126,7 @@ void AbstractTest::seekPos(uint64_t bitIdx)
     switch (dataSrcType) {
         case dsMemory : {
             curSubIdx       = bitIdx & 63;
-            curBlockPointer = (uint64_t*)(data + (bitIdx >> 6));
+            curBlockPointer = (uint64_t*)(data + (bitIdx >> 3));
             if (curBlockPointer != endBlockPointer)
                 curBlockVal = *curBlockPointer;
             else if (endBlockCnt > 0)
@@ -145,13 +147,15 @@ int8_t AbstractTest::getNextBit()
 {
     switch (dataSrcType) {
         case dsMemory : {
-            if ((curBlockPointer == endBlockPointer) && 
+            if ((curBlockPointer == endBlockPointer) &&
                 (curSubIdx == endBlockCnt * 8)) {
                 fprintf(stderr,"ERROR in AbstractTest::getNextBit(): "
                                "end of data!\n");
                 return - 1;
             }
-            int8_t nextBit = (curBlockVal >> curSubIdx) & 1;
+            //int8_t nextBit = (curBlockVal >> curSubIdx) & 1;
+            // MSB first as in NIST suite
+            int8_t nextBit = ((curBlockVal >> (curSubIdx & ~0x7)) >> (7 - (curSubIdx & 7))) & 1;
             curSubIdx = (curSubIdx + 1) & 63;
             if (curSubIdx == 0) {
                 if ((++curBlockPointer) != endBlockPointer)

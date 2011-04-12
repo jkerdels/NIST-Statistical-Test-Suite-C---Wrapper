@@ -51,6 +51,7 @@ BlockFrequency(int M, int n)
 
 }  */
 
+    seekPos(0);
 
     uint64_t nob = getNrOfBits();
 

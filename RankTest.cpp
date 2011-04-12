@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   RankTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 17:44
  */
 
@@ -101,6 +101,7 @@ double RankTest::runTest()
 
  */
 
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < (32*32)) {
         fprintf(stderr,"RankTest::runTest(): Data should contain at least 32*32 Bits!\n");

@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   SerialTest.cpp
  * Author: jk
- * 
+ *
  * Created on 13. Dezember 2010, 23:08
  */
 #include <cstdlib>
@@ -73,6 +73,7 @@ Serial(int m, int n)
 	fprintf(results[TEST_SERIAL], "%f\n", p_value2); fflush(results[TEST_SERIAL]);
 }
  */
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (m >= floor(log(nob) / log(2.0))-2.0 ) {
         fprintf(stderr,"SerialTest::runTest(): "

@@ -116,6 +116,7 @@ ApproximateEntropy(int m, int n)
 	fprintf(results[TEST_APEN], "%f\n", p_value); fflush(results[TEST_APEN]);
 }
  */
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (m >= floor(log(nob) / log(2.0))-5.0 ) {
         fprintf(stderr,"ApproximateEntropyTest::runTest(): "

@@ -37,28 +37,65 @@ int main(int argc, char** argv)
 		printf("Usage: %s [OPTIONS]\n\n",argv[0]);
 		printf("Options:\n"
 		       "         -i [inputfiles]\n"
-			   "            one or more input files with random data to test\n"
-			   "            1.000.000 Bits per file recommended to provide\n"
-               "            enough data for all tests\n\n"
-			   "         -A\n"
-               "            run all tests with default parameters\n"
-               "            for detailed information please read the excellent\n"
-               "            STS manual of NIST\n\n"
+			   "            One or more input files with random data to test.\n"
+			   "            1.000.000 x nrOfRuns (default: 100) Bits per file\n"
+			   "            needed to provide enough data for all tests\n\n"
 			   "         -o [outputfile]\n"
-			   "            the results will be formated as columns separated\n"
+			   "            The results will be formated as columns separated\n"
                "            by a delimiter specified with -d or space if not\n"
                "            specified\n\n"
 			   "         -d [delimiter char] (optional)\n"
-			   "            specifies the delimiter to use in the output file\n\n");
+			   "            Specifies the delimiter to use in the output file\n\n"
+			   "         -s [sample size]\n"
+			   "            Specifies the sample size in bits. default: 1.000.000\n\n"
+               "         -r [nr of runs]\n"
+               "            Specifies the number of runs, i.e. if you have an\n"
+               "            alpha value of 0.01 then 10 fails in 1000 runs is the\n"
+               "            expected number of fails. default: 100\n\n"
+			   "         -a [alpha value]\n"
+			   "            Specifies the alpha value which defines the threshold\n"
+			   "            at which a random sequence is assumed to be non-random\n"
+			   "            if its p-value is below the alpha threshold.\n"
+			   "            Default: 0.01\n\n"
+			   "         -P\n"
+			   "            Print only p-values and do not compare to alpha value\n\n"
+			   "         -v\n"
+			   "            Verbose output\n\n"
+			   "         -t [tests to run]\n"
+			   "            Bit vector to specify which test should be run.\n"
+			   "            Available tests:\n"
+			   "            ---------------------------------------\n"
+			   "            00 - frequency\n"
+			   "            01 - block frequency\n"
+			   "            02 - runs\n"
+			   "            03 - longest run of ones\n"
+			   "            04 - rank\n"
+			   "            05 - discrete fourier transform\n"
+			   "            06 - non overlapping template matching\n"
+			   "            07 - overlapping template matching\n"
+			   "            08 - maurers\n"
+			   "            09 - linear complexity\n"
+			   "            10 - serial\n"
+			   "            11 - approximate entropy\n"
+			   "            12 - cumulative sums\n"
+			   "            13 - random excursions\n"
+			   "            14 - random excursions variant\n"
+			   "            ---------------------------------------\n"
+			   "            So, for example, if you want to run tests 0,1,5 and 8\n"
+			   "            then the bit vector is 100100011\n"
+			   "            Default: all tests selected\n\n");
 		return 0;
 	}
-
 	// parameter vars
 	vector<FILE*> inputfiles;
 	char colDelimiter = ' ';
 	FILE *outputfile  = NULL;
-	bool useDefaultParams = false;
-
+    uint32_t testDataSize = 125000;
+    uint32_t nrOfRuns = 100;
+    double   alpha = 0.01;
+    bool pOnly = false;
+    bool verbose = false;
+    uint32_t selectedTests = 0xFFFFFFFF;
 	// parse parameters
 	int32_t i = 1;
 	while (i < argc) {
@@ -77,11 +114,6 @@ int main(int argc, char** argv)
 					--i;
 				} break;
 
-				// enable use of default parameters
-				case 'A' : {
-					useDefaultParams = true;
-				} break;
-
 				// get output file
 				case 'o' : {
 					++i;
@@ -96,6 +128,64 @@ int main(int argc, char** argv)
 						colDelimiter = argv[i][0];
 				} break;
 
+				// get sample size
+				case 's' : {
+                    ++i;
+                    if (i < argc) {
+                        int32_t tVal = atoi(argv[i]);
+                        if (tVal > 0) {
+                            testDataSize = tVal / 8;
+                            if ((tVal & 7) > 0)
+                                testDataSize++;
+                        } else {
+                            printf("Invalid size: %i --> using default value\n",tVal);
+                        }
+                    }
+                } break;
+
+				// get number of runs
+				case 'r' : {
+                    ++i;
+                    if (i < argc) {
+                        int32_t tVal = atoi(argv[i]);
+                        if (tVal > 0) {
+                            nrOfRuns = tVal;
+                        } else {
+                            printf("Invalid number of runs: %i --> using default value\n",tVal);
+                        }
+                    }
+                } break;
+
+				// get alpha value
+				case 'a' : {
+                    ++i;
+                    if (i < argc) {
+                        double tVal = atof(argv[i]);
+                        if (tVal > 0) {
+                            alpha = tVal;
+                        } else {
+                            printf("Invalid alpha value: %f --> using default value\n",tVal);
+                        }
+                    }
+                } break;
+
+				// enable P-Only
+				case 'P' : {
+					pOnly = true;
+				} break;
+
+				// enable verbose output
+				case 'v' : {
+					verbose = true;
+				} break;
+
+				// get number of runs
+				case 't' : {
+                    ++i;
+                    if (i < argc)
+                        selectedTests = strtoul(argv[i],0,2);
+                } break;
+
 				// unknown parameter
 				default : {
 					printf("Unknown parameter: %s\n",argv[i]);
@@ -108,107 +198,135 @@ int main(int argc, char** argv)
 	// check input params
 
 	if ((inputfiles.size() > 0) &&
-        (outputfile != NULL) &&
-        ((useDefaultParams == true) ||
-         (false /* add check for parameter-file later */)))
+        (outputfile != NULL))
 	{
 		// prepare tests
-		uint32_t testDataSize = 0;
-		uint8_t *testdata     = 0;
+		if (verbose) printf("+ preparing tests.\n");
+		uint8_t *testdata = new uint8_t[testDataSize];
 		vector<AbstractTest*> tests;
 		vector<double> resultVec;
-		if (useDefaultParams) {
-			// set up default test
-			tests.push_back(new FrequencyTest());
-			tests.push_back(new BlockFrequencyTest());
-			tests.push_back(new RunsTest());
-			tests.push_back(new LongestRunOfOnesTest());
-			tests.push_back(new RankTest());
-			tests.push_back(new DiscreteFourierTransformTest());
-			tests.push_back(new NonOverlappingTemplateMatchingTest());
-			tests.push_back(new OverlappingTemplateMatchingTest());
-			tests.push_back(new MaurersTest());
-			tests.push_back(new LinearComplexityTest());
-			tests.push_back(new SerialTest());
-			tests.push_back(new ApproximateEntropyTest());
-			tests.push_back(new CumulativeSumsTest());
-			tests.push_back(new RandomExcursionsTest());
-			tests.push_back(new RandomExcursionVariantTest());
-			// set default test data size to 1.000.000 bits
-			testDataSize = 125000;
-			testdata = new uint8_t[testDataSize];
-			vector<AbstractTest*>::iterator tit;
-			for (tit = tests.begin(); tit != tests.end(); ++tit) {
-				AbstractTest *curTest = *tit;
-				curTest->setData(testdata,testDataSize);
-				curTest->setResultVector(&resultVec);
-			}
-		} else {
-			// set up test according to parameter file
-		}
+        // set up tests
+        if (selectedTests & 0x0001)
+            tests.push_back(new FrequencyTest());
+        if (selectedTests & 0x0002)
+            tests.push_back(new BlockFrequencyTest());
+        if (selectedTests & 0x0004)
+            tests.push_back(new RunsTest());
+        if (selectedTests & 0x0008)
+            tests.push_back(new LongestRunOfOnesTest());
+        if (selectedTests & 0x0010)
+            tests.push_back(new RankTest());
+        if (selectedTests & 0x0020)
+            tests.push_back(new DiscreteFourierTransformTest());
+        if (selectedTests & 0x0040)
+            tests.push_back(new NonOverlappingTemplateMatchingTest());
+        if (selectedTests & 0x0080)
+            tests.push_back(new OverlappingTemplateMatchingTest());
+        if (selectedTests & 0x0100)
+            tests.push_back(new MaurersTest());
+        if (selectedTests & 0x0200)
+            tests.push_back(new LinearComplexityTest());
+        if (selectedTests & 0x0400)
+            tests.push_back(new SerialTest());
+        if (selectedTests & 0x0800)
+            tests.push_back(new ApproximateEntropyTest());
+        if (selectedTests & 0x1000)
+            tests.push_back(new CumulativeSumsTest());
+        if (selectedTests & 0x2000)
+            tests.push_back(new RandomExcursionsTest());
+        if (selectedTests & 0x4000)
+            tests.push_back(new RandomExcursionVariantTest());
+        // set data and result pointer
+        vector<AbstractTest*>::iterator tit;
+        for (tit = tests.begin(); tit != tests.end(); ++tit) {
+            AbstractTest *curTest = *tit;
+            curTest->setData(testdata,testDataSize);
+            curTest->setResultVector(&resultVec);
+        }
 		// run tests
 		if (testdata) {
 			uint32_t inpCnt = 0;
+			uint32_t inpCnt2 = 0;
 			vector<FILE*>::iterator it;
 			for (it = inputfiles.begin(); it != inputfiles.end(); ++it) {
-				// read data
-				uint32_t offset = 0;
-				uint32_t rr     = 0;
-				while ((rr < testDataSize) && (!feof(*it))) {
-                	rr += fread(testdata+offset,1,testDataSize-rr,*it);
-					offset += rr;
-				}
-				if (rr < testDataSize) {
-					printf("Not enough data for input file nr. %u - skipping it.\n",inpCnt);
-					continue;
-				}
-				// process data
-				vector<AbstractTest*>::iterator tit;
-				if (inpCnt == 0) {
+                if (verbose) printf("+ processing input file %u\n",inpCnt2);
+                uint32_t r;
+                for (r = 0; r < nrOfRuns; ++r) {
+                    if (verbose) printf("++ run %u\n",r);
+                    // read data
+                    uint32_t offset = 0;
+                    uint32_t rr     = 0;
+                    while ((rr < testDataSize) && (!feof(*it))) {
+                        rr += fread(testdata+offset,1,testDataSize-rr,*it);
+                        offset += rr;
+                    }
+                    if (rr < testDataSize) {
+                        printf("Not enough data for input file nr. %u - skipping it.\n",inpCnt);
+                        continue;
+                    }
+                    // process data
+                    vector<AbstractTest*>::iterator tit;
+                    if (inpCnt == 0) {
+                        for (tit = tests.begin(); tit != tests.end(); ++tit) {
+                            AbstractTest *curTest = *tit;
+                            if (inpCnt == 0) {
+                                if (curTest->resultVectorNeeded()) {
+                                    resultVec.clear();
+                                    curTest->runTest();
+                                    uint32_t j;
+                                    for (j = 0; j < resultVec.size(); ++j)
+                                        fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
+                                } else {
+                                    fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
+                                }
+                            }
+                        }
+                        fprintf(outputfile,"\n");
+                    }
                     for (tit = tests.begin(); tit != tests.end(); ++tit) {
                         AbstractTest *curTest = *tit;
-                        if (inpCnt == 0) {
-                            if (curTest->resultVectorNeeded()) {
-                                resultVec.clear();
-                                curTest->runTest();
-                                uint32_t j;
-                                for (j = 0; j < resultVec.size(); ++j)
-                                    fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
+                        resultVec.clear();
+                        if (verbose) printf("+++ test: %s ",curTest->getTestName());
+                        double pValue = curTest->runTest();
+
+                        if (curTest->resultVectorNeeded()) {
+                            uint32_t j;
+                            if (curTest->testWasApplicable()) {
+                                if (verbose) printf("result: vector output omitted here\n");
+                                for (j = 0; j < resultVec.size(); ++j) {
+                                    if (pOnly)
+                                        fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
+                                    else
+                                        fprintf(outputfile,"%u%c",(resultVec[j] < alpha) ? 0 : 1,colDelimiter);
+                                }
                             } else {
-                                fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
+                                if (verbose) printf("result: not applicable\n");
+                                for (j = 0; j < resultVec.size(); ++j)
+                                    fprintf(outputfile,"***%c",colDelimiter);
+                            }
+                        } else {
+                            if (curTest->testWasApplicable()) {
+                                if (verbose) printf("result: %f\n",pValue);
+                                if (pOnly)
+                                    fprintf(outputfile,"%f%c",pValue,colDelimiter);
+                                else
+                                    fprintf(outputfile,"%u%c",(pValue < alpha) ? 0 : 1,colDelimiter);
+                            } else {
+                                if (verbose) printf("result: not applicable\n");
+                                fprintf(outputfile,"***%c",colDelimiter);
                             }
                         }
                     }
                     fprintf(outputfile,"\n");
-				}
-				for (tit = tests.begin(); tit != tests.end(); ++tit) {
-					AbstractTest *curTest = *tit;
-					resultVec.clear();
-					double pValue = curTest->runTest();
-					if (curTest->resultVectorNeeded()) {
-						uint32_t j;
-						if (curTest->testWasApplicable()) {
-                            for (j = 0; j < resultVec.size(); ++j)
-                                fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
-                        } else {
-                            for (j = 0; j < resultVec.size(); ++j)
-                                fprintf(outputfile,"***%c",colDelimiter);
-                        }
-					} else {
-                        if (curTest->testWasApplicable())
-                            fprintf(outputfile,"%f%c",pValue,colDelimiter);
-                        else
-                            fprintf(outputfile,"***%c",colDelimiter);
-					}
-				}
-                fprintf(outputfile,"\n");
-				++inpCnt;
+                    ++inpCnt;
+                }
+                ++inpCnt2;
 			}
 		}
+		if (verbose) printf("+ cleanup\n");
 		// cleanup tests
 		if (testdata)
 			delete[] testdata;
-		vector<AbstractTest*>::iterator tit;
 		for (tit = tests.begin(); tit != tests.end(); ++tit) {
 			delete *tit;
 		}

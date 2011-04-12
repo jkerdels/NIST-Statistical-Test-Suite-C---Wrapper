@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   RunsTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 16:07
  */
 
@@ -72,7 +72,7 @@ double RunsTest::runTest()
 
 	fprintf(results[TEST_RUNS], "%f\n", p_value); fflush(results[TEST_RUNS]);
  */
-
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 100) {
         fprintf(stderr,"RunsTest::runTest(): Data should contain at least 100 Bits!\n");
@@ -90,7 +90,7 @@ double RunsTest::runTest()
     pi = (double)(S) / (double)(nob);
 
     if ( fabs(pi - 0.5) > (2.0 / sqrt((double)(nob))) ) {
-	p_value = 0.0;
+        p_value = 0.0;
         return p_value;
     }
 
@@ -104,7 +104,7 @@ double RunsTest::runTest()
         lastBit = curBit;
     }
     erfc_arg = fabs(V - 2.0 * (double)(nob) * pi * (1.0 - pi)) /
-               (2.0 * pi * (1 - pi) * sqrt((double)(2*nob)));
+               (2.0 * pi * (1.0 - pi) * sqrt((double)(2*nob)));
     p_value = erfc(erfc_arg);
 
     return p_value;

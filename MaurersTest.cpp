@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   MaurersTest.cpp
  * Author: jk
- * 
+ *
  * Created on 13. Dezember 2010, 21:34
  */
 #include <cstdlib>
@@ -37,7 +37,7 @@ double MaurersTest::runTest()
 				12.168070, 13.167693, 14.167488, 15.167379 };
 	double   variance[17] = { 0, 0, 0, 0, 0, 0, 2.954, 3.125, 3.238, 3.311, 3.356, 3.384,
 				3.401, 3.410, 3.416, 3.419, 3.421 };
-	
+
 	// * * * * * * * * * ** * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 * THE FOLLOWING REDEFINES L, SHOULD THE CONDITION:     n >= 1010*2^L*L       *
 	 * NOT BE MET, FOR THE BLOCK LENGTH L.                                        *
@@ -54,10 +54,10 @@ double MaurersTest::runTest()
 	if ( n >= 231669760 )  L = 14;
 	if ( n >= 496435200 )  L = 15;
 	if ( n >= 1059061760 ) L = 16;
-	
+
 	Q = 10*(int)pow(2, L);
-	K = (int) (floor(n/L) - (double)Q);	 		    // BLOCKS TO TEST 
-	
+	K = (int) (floor(n/L) - (double)Q);	 		    // BLOCKS TO TEST
+
 	p = (int)pow(2, L);
 	if ( (L < 6) || (L > 16) || ((double)Q < 10*pow(2, L)) ||
 		 ((T = (long *)calloc(p, sizeof(long))) == NULL) ) {
@@ -68,21 +68,21 @@ double MaurersTest::runTest()
 		fprintf(stats[TEST_UNIVERSAL], "\t\t-OR- :  Unable to allocate T.\n");
 		return;
 	}
-	
-	// COMPUTE THE EXPECTED:  Formula 16, in Marsaglia's Paper 
+
+	// COMPUTE THE EXPECTED:  Formula 16, in Marsaglia's Paper
 	c = 0.7 - 0.8/(double)L + (4 + 32/(double)L)*pow(K, -3/(double)L)/15;
 	sigma = c * sqrt(variance[L]/(double)K);
 	sqrt2 = sqrt(2);
 	sum = 0.0;
 	for ( i=0; i<p; i++ )
 		T[i] = 0;
-	for ( i=1; i<=Q; i++ ) {		// INITIALIZE TABLE 
+	for ( i=1; i<=Q; i++ ) {		// INITIALIZE TABLE
 		decRep = 0;
 		for ( j=0; j<L; j++ )
 			decRep += epsilon[(i-1)*L+j] * (long)pow(2, L-1-j);
 		T[decRep] = i;
 	}
-	for ( i=Q+1; i<=Q+K; i++ ) { 	// PROCESS BLOCKS 
+	for ( i=Q+1; i<=Q+K; i++ ) { 	// PROCESS BLOCKS
 		decRep = 0;
 		for ( j=0; j<L; j++ )
 			decRep += epsilon[(i-1)*L+j] * (long)pow(2, L-1-j);
@@ -113,11 +113,12 @@ double MaurersTest::runTest()
 
 	fprintf(stats[TEST_UNIVERSAL], "%s\t\tp_value = %f\n\n", p_value < ALPHA ? "FAILURE" : "SUCCESS", p_value); fflush(stats[TEST_UNIVERSAL]);
 	fprintf(results[TEST_UNIVERSAL], "%f\n", p_value); fflush(results[TEST_UNIVERSAL]);
-	
+
 	free(T);
 }
 
  */
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 387840) {
         fprintf(stderr,"MaurersTest::runTest(): "

@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   OverlappingTemplateMatchingTest.cpp
  * Author: jk
- * 
+ *
  * Created on 16. August 2010, 22:00
  */
 #include <cstdlib>
@@ -126,6 +126,7 @@ double OverlappingTemplateMatchingTest::runTest()
 	fprintf(results[TEST_OVERLAPPING], "%f\n", p_value); fflush(results[TEST_OVERLAPPING]);
 
  */
+    seekPos(0);
 
     uint64_t nob = getNrOfBits();
     if (nob < 1000000) {

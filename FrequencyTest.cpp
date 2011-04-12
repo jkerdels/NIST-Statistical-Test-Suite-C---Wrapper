@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   FrequencyTest.cpp
  * Author: jk
- * 
+ *
  * Created on 15. August 2010, 00:08
  */
 
@@ -44,6 +44,7 @@ Frequency(int n)
 
  */
 
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 100) {
         fprintf(stderr,"FrequencyTest::runTest(): Data should contain at least 100 Bits!\n");

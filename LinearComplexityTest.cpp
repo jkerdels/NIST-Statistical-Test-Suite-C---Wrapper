@@ -172,6 +172,7 @@ LinearComplexity(int M, int n)
 	free(T);
 }
  */
+    seekPos(0);
     uint64_t nob = getNrOfBits();
     if (nob < 1000000) {
         fprintf(stderr,"LinearComplexityTest::runTest(): "
