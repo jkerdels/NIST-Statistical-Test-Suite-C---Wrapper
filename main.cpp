@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <vector>
+#include <cmath>
+#include <cstring>
 
 using namespace std;
 
@@ -29,6 +31,8 @@ using namespace std;
 #include "CumulativeSumsTest.h"
 #include "RandomExcursionsTest.h"
 #include "RandomExcursionVariantTest.h"
+
+const uint32_t NrOfHistBins = 10;
 
 int main(int argc, char** argv)
 {
@@ -58,7 +62,7 @@ int main(int argc, char** argv)
 			   "            if its p-value is below the alpha threshold.\n"
 			   "            Default: 0.01\n\n"
 			   "         -P\n"
-			   "            Print only p-values and do not compare to alpha value\n\n"
+			   "            Print only p-values and do not compare to alpha value (default)\n\n"
 			   "         -v\n"
 			   "            Verbose output\n\n"
 			   "         -t [tests to run]\n"
@@ -93,7 +97,7 @@ int main(int argc, char** argv)
     uint32_t testDataSize = 125000;
     uint32_t nrOfRuns = 100;
     double   alpha = 0.01;
-    bool pOnly = false;
+    bool pOnly = true;
     bool verbose = false;
     uint32_t selectedTests = 0xFFFFFFFF;
 	// parse parameters
@@ -243,6 +247,13 @@ int main(int argc, char** argv)
             curTest->setData(testdata,testDataSize);
             curTest->setResultVector(&resultVec);
         }
+        // statistic data
+        double *alphaSum = 0;
+        double *failSum = 0;
+        double *histograms = 0;
+
+        uint32_t nrOfColumns = 0;
+
 		// run tests
 		if (testdata) {
 			uint32_t inpCnt = 0;
@@ -276,13 +287,29 @@ int main(int argc, char** argv)
                                     uint32_t j;
                                     for (j = 0; j < resultVec.size(); ++j)
                                         fprintf(outputfile,"%s%u%c",curTest->getTestName(),j,colDelimiter);
+                                    nrOfColumns += resultVec.size();
                                 } else {
+                                    nrOfColumns++;
                                     fprintf(outputfile,"%s%c",curTest->getTestName(),colDelimiter);
                                 }
                             }
                         }
                         fprintf(outputfile,"\n");
+                        if ((!alphaSum) && (nrOfColumns)) {
+                            alphaSum = new double[nrOfColumns];
+                            memset(alphaSum,0,sizeof(double)*nrOfColumns);
+                        }
+                        if ((!failSum) && (nrOfColumns)) {
+                            failSum = new double[nrOfColumns];
+                            memset(failSum,0,sizeof(double)*nrOfColumns);
+                        }
+                        if ((!histograms) && (nrOfColumns) && (NrOfHistBins)) {
+                            histograms = new double[nrOfColumns*NrOfHistBins];
+                            memset(histograms,0,sizeof(double)*nrOfColumns*NrOfHistBins);
+                        }
+
                     }
+                    uint32_t testNr = 0;
                     for (tit = tests.begin(); tit != tests.end(); ++tit) {
                         AbstractTest *curTest = *tit;
                         resultVec.clear();
@@ -298,11 +325,20 @@ int main(int argc, char** argv)
                                         fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
                                     else
                                         fprintf(outputfile,"%u%c",(resultVec[j] < alpha) ? 0 : 1,colDelimiter);
+                                    alphaSum[testNr] += (resultVec[j] < alpha) ? 0 : 1;
+                                    uint32_t idx = (uint32_t)(floor(resultVec[j]*NrOfHistBins));
+                                    if (idx >= NrOfHistBins)
+                                        idx = NrOfHistBins-1;
+                                    histograms[(testNr*NrOfHistBins)+idx] += 1;
+                                    testNr++;
                                 }
                             } else {
                                 if (verbose) printf("result: not applicable\n");
-                                for (j = 0; j < resultVec.size(); ++j)
+                                for (j = 0; j < resultVec.size(); ++j) {
                                     fprintf(outputfile,"***%c",colDelimiter);
+                                    failSum[testNr] += 1;
+                                    testNr++;
+                                }
                             }
                         } else {
                             if (curTest->testWasApplicable()) {
@@ -311,9 +347,17 @@ int main(int argc, char** argv)
                                     fprintf(outputfile,"%f%c",pValue,colDelimiter);
                                 else
                                     fprintf(outputfile,"%u%c",(pValue < alpha) ? 0 : 1,colDelimiter);
+                                alphaSum[testNr] += (pValue < alpha) ? 0 : 1;
+                                uint32_t idx = (uint32_t)(floor(pValue*NrOfHistBins));
+                                if (idx >= NrOfHistBins)
+                                    idx = NrOfHistBins-1;
+                                histograms[(testNr*NrOfHistBins)+idx] += 1;
+                                testNr++;
                             } else {
                                 if (verbose) printf("result: not applicable\n");
                                 fprintf(outputfile,"***%c",colDelimiter);
+                                failSum[testNr] += 1;
+                                testNr++;
                             }
                         }
                     }
@@ -323,6 +367,34 @@ int main(int argc, char** argv)
                 ++inpCnt2;
 			}
 		}
+		// write alphaSums and histograms
+        if ((alphaSum) && (failSum)) {
+            fprintf(outputfile,"\n# AlphaSums normalized\n");
+            uint32_t j;
+            for (j = 0; j < nrOfColumns; ++j) {
+                double normDiv = (double)(nrOfRuns)-failSum[j];
+                if (normDiv != 0)
+                    fprintf(outputfile,"%f%c",alphaSum[j]/normDiv,colDelimiter);
+                else
+                    fprintf(outputfile,"***%c",colDelimiter);
+            }
+            fprintf(outputfile,"\n");
+        }
+		if ((histograms) && (failSum)){
+            fprintf(outputfile,"\n# Histograms\n");
+            uint32_t j,k;
+            for (k = 0; k < NrOfHistBins; ++k) {
+                for (j = 0; j < nrOfColumns; ++j) {
+                    double normDiv = (double)(nrOfRuns)-failSum[j];
+                    if (normDiv != 0)
+                        fprintf(outputfile,"%f%c",histograms[(j*NrOfHistBins)+k]/normDiv,colDelimiter);
+                    else
+                        fprintf(outputfile,"***%c",colDelimiter);
+                }
+                fprintf(outputfile,"\n");
+            }
+        }
+
 		if (verbose) printf("+ cleanup\n");
 		// cleanup tests
 		if (testdata)
@@ -330,6 +402,12 @@ int main(int argc, char** argv)
 		for (tit = tests.begin(); tit != tests.end(); ++tit) {
 			delete *tit;
 		}
+		if (alphaSum)
+            delete[] alphaSum;
+		if (failSum)
+            delete[] failSum;
+		if (histograms)
+            delete[] histograms;
 	}
 
 	// cleanup
