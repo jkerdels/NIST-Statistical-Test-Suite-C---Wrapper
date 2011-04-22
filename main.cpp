@@ -254,6 +254,8 @@ int main(int argc, char** argv)
 
         uint32_t nrOfColumns = 0;
 
+        double allAboveAlphaSum = 0;
+
 		// run tests
 		if (testdata) {
 			uint32_t inpCnt = 0;
@@ -294,7 +296,7 @@ int main(int argc, char** argv)
                                 }
                             }
                         }
-                        fprintf(outputfile,"\n");
+                        fprintf(outputfile,"all_tests_above_alpha\n");
                         if ((!alphaSum) && (nrOfColumns)) {
                             alphaSum = new double[nrOfColumns];
                             memset(alphaSum,0,sizeof(double)*nrOfColumns);
@@ -310,6 +312,7 @@ int main(int argc, char** argv)
 
                     }
                     uint32_t testNr = 0;
+                    bool allTestsAboveAlpha = true;
                     for (tit = tests.begin(); tit != tests.end(); ++tit) {
                         AbstractTest *curTest = *tit;
                         resultVec.clear();
@@ -325,7 +328,11 @@ int main(int argc, char** argv)
                                         fprintf(outputfile,"%f%c",resultVec[j],colDelimiter);
                                     else
                                         fprintf(outputfile,"%u%c",(resultVec[j] < alpha) ? 0 : 1,colDelimiter);
-                                    alphaSum[testNr] += (resultVec[j] < alpha) ? 0 : 1;
+                                    if (resultVec[j] < alpha) {
+                                        allTestsAboveAlpha = false;
+                                    } else {
+                                        alphaSum[testNr] += 1;
+                                    }
                                     uint32_t idx = (uint32_t)(floor(resultVec[j]*NrOfHistBins));
                                     if (idx >= NrOfHistBins)
                                         idx = NrOfHistBins-1;
@@ -347,7 +354,11 @@ int main(int argc, char** argv)
                                     fprintf(outputfile,"%f%c",pValue,colDelimiter);
                                 else
                                     fprintf(outputfile,"%u%c",(pValue < alpha) ? 0 : 1,colDelimiter);
-                                alphaSum[testNr] += (pValue < alpha) ? 0 : 1;
+                                if (pValue < alpha) {
+                                    allTestsAboveAlpha = false;
+                                } else {
+                                    alphaSum[testNr] += 1;
+                                }
                                 uint32_t idx = (uint32_t)(floor(pValue*NrOfHistBins));
                                 if (idx >= NrOfHistBins)
                                     idx = NrOfHistBins-1;
@@ -361,7 +372,13 @@ int main(int argc, char** argv)
                             }
                         }
                     }
-                    fprintf(outputfile,"\n");
+
+                    if (allTestsAboveAlpha) {
+                        fprintf(outputfile,"1\n");
+                        allAboveAlphaSum += 1;
+                    } else {
+                        fprintf(outputfile,"0\n");
+                    }
                     ++inpCnt;
                 }
                 ++inpCnt2;
@@ -378,7 +395,7 @@ int main(int argc, char** argv)
                 else
                     fprintf(outputfile,"***%c",colDelimiter);
             }
-            fprintf(outputfile,"\n");
+            fprintf(outputfile,"%f\n",allAboveAlphaSum/(double)(nrOfRuns));
         }
 		if ((histograms) && (failSum)){
             fprintf(outputfile,"\n# Histograms\n");
